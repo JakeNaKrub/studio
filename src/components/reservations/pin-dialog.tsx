@@ -20,6 +20,8 @@ interface PinDialogProps {
   onSubmit: (pin: string) => void;
 }
 
+const ADMIN_PIN_LENGTH = 7;
+
 export function PinDialog({
   isOpen,
   onOpenChange,
@@ -30,7 +32,9 @@ export function PinDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+    if (pin.toUpperCase() === "ITISESC") {
+       // Allow admin pin
+    } else if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
       setError("PIN must be 4 digits.");
       return;
     }
@@ -57,7 +61,7 @@ export function PinDialog({
               Enter PIN
             </DialogTitle>
             <DialogDescription>
-              Please enter the 4-digit PIN associated with this reservation to proceed.
+              Please enter the 4-digit PIN associated with this reservation to proceed. Admin can use override PIN.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -70,7 +74,7 @@ export function PinDialog({
                 type="password"
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
-                maxLength={4}
+                maxLength={ADMIN_PIN_LENGTH}
                 className="col-span-3"
                 autoFocus
               />

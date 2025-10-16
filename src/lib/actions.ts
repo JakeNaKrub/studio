@@ -19,8 +19,10 @@ const ReservationSchema = z.object({
 
 const PinSchema = z.object({
   id: z.string(),
-  pin: z.string().length(4, "PIN must be 4 digits"),
-})
+  pin: z.string(), // Allow variable length for admin PIN
+});
+
+const ADMIN_PIN = "ITISESC";
 
 export async function getReservations(): Promise<Reservation[]> {
   // In a real app, you would fetch from Firestore
@@ -91,8 +93,15 @@ export async function deleteReservation(prevState: any, formData: FormData) {
 
   const reservationIndex = db.reservations.findIndex((r) => r.id === id);
 
-  if (reservationIndex === -1 || db.reservations[reservationIndex].pin !== pin) {
-    return { message: "Invalid PIN or reservation not found." };
+  if (reservationIndex === -1) {
+    return { message: "Reservation not found." };
+  }
+
+  const reservation = db.reservations[reservationIndex];
+  
+  // Check if the provided PIN is the admin PIN or the correct reservation PIN
+  if (pin !== ADMIN_PIN && pin !== reservation.pin) {
+    return { message: "Invalid PIN." };
   }
 
   db.reservations.splice(reservationIndex, 1);
