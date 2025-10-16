@@ -88,7 +88,7 @@ interface ReservationDialogProps {
   onSuccess?: (reservation: Reservation) => void;
 }
 
-export function ReservationDialog({ 
+export function ReservationDialog({
   children,
   reservation,
   isOpen: controlledIsOpen,
@@ -97,7 +97,7 @@ export function ReservationDialog({
 }: ReservationDialogProps) {
   const firestore = useFirestore();
   const { toast } = useToast();
-  
+
   const isEditMode = !!reservation;
 
   const [internalIsOpen, setInternalIsOpen] = useState(false);
@@ -120,7 +120,7 @@ export function ReservationDialog({
       pin: "",
     },
   });
-  
+
   useEffect(() => {
     if (isDialogOpen) {
       form.reset(isEditMode && reservation ? {
@@ -167,7 +167,7 @@ export function ReservationDialog({
         resultReservation = newDoc;
         toast({ title: "Success!", description: "Reservation created successfully." });
       }
-      
+
       if(onSuccess) {
         onSuccess(resultReservation);
       }
@@ -182,7 +182,7 @@ export function ReservationDialog({
       });
     }
   };
-  
+
   const availableEndTimes = useMemo(() => {
     const startTime = form.watch("startTime");
     if (!startTime) return end_timeSlots;
@@ -200,8 +200,8 @@ export function ReservationDialog({
   return (
     <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[425px] md:max-w-[600px] max-h-screen flex flex-col">
+        <DialogHeader className="p-6 pb-4">
           <DialogTitle>{isEditMode ? 'Edit Reservation' : 'Create a New Reservation'}</DialogTitle>
           <DialogDescription>
             {isEditMode ? 'Update the details for your reservation.' : 'Fill in the details below to book a common room.'}
@@ -210,160 +210,162 @@ export function ReservationDialog({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onFormSubmit)}
-            className="space-y-4"
+            className="flex-1 flex flex-col overflow-hidden"
           >
-            <FormField
-              control={form.control}
-              name="meetingName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Meeting Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Quarterly Review" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex-1 overflow-y-auto px-6 space-y-4 py-4">
               <FormField
                 control={form.control}
-                name="personName"
+                name="meetingName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Your Name</FormLabel>
+                    <FormLabel>Meeting Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} />
+                      <Input placeholder="e.g. Quarterly Review" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="mobileNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mobile Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="123-456-7890" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col pt-2">
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} min={format(new Date(), "yyyy-MM-dd")}/>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="startTime"
-                render={({ field }) => (
-                  <FormItem className="pt-2">
-                    <FormLabel>Start Time</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select start time" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {timeSlots.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="endTime"
-                render={({ field }) => (
-                  <FormItem className="pt-2">
-                    <FormLabel>End Time</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select end time" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {availableEndTimes.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="roomSize"
-                render={({ field }) => (
-                  <FormItem className="space-y-3 pt-2">
-                    <FormLabel>Room Size</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        className="flex items-center space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="small" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Small</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="large" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Large</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {!isEditMode && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
-                    control={form.control}
-                    name="pin"
-                    render={({ field }) => (
-                    <FormItem className="pt-2">
-                        <FormLabel>4-Digit PIN</FormLabel>
-                        <FormControl>
-                        <Input type="password" placeholder="****" {...field} maxLength={4} />
-                        </FormControl>
-                        <FormMessage />
+                  control={form.control}
+                  name="personName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
                     </FormItem>
-                    )}
+                  )}
                 />
-              )}
+                <FormField
+                  control={form.control}
+                  name="mobileNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mobile Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="123-456-7890" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col pt-2">
+                      <FormLabel>Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} min={format(new Date(), "yyyy-MM-dd")}/>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="startTime"
+                  render={({ field }) => (
+                    <FormItem className="pt-2">
+                      <FormLabel>Start Time</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select start time" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {timeSlots.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="endTime"
+                  render={({ field }) => (
+                    <FormItem className="pt-2">
+                      <FormLabel>End Time</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select end time" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {availableEndTimes.map(time => <SelectItem key={time} value={time}>{time}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="roomSize"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3 pt-2">
+                      <FormLabel>Room Size</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          className="flex items-center space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="small" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Small</FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="large" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Large</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {!isEditMode && (
+                  <FormField
+                      control={form.control}
+                      name="pin"
+                      render={({ field }) => (
+                      <FormItem className="pt-2">
+                          <FormLabel>4-Digit PIN</FormLabel>
+                          <FormControl>
+                          <Input type="password" placeholder="****" {...field} maxLength={4} />
+                          </FormControl>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                )}
+              </div>
             </div>
-            <DialogFooter className="pt-4">
-              <DialogClose asChild>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
+            <DialogFooter className="px-6 pb-6 pt-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 border-t mt-auto">
+                <DialogClose asChild>
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                        Cancel
+                    </Button>
+                </DialogClose>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting ? "Saving..." : (isEditMode ? "Update Reservation" : "Save Reservation")}
                 </Button>
-              </DialogClose>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Saving..." : (isEditMode ? "Update Reservation" : "Save Reservation")}
-              </Button>
             </DialogFooter>
           </form>
         </Form>
