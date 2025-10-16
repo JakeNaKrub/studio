@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import * as React from "react";
 import { format } from "date-fns";
@@ -70,7 +70,7 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
             head_cell: 'flex-1 text-muted-foreground rounded-md font-normal text-sm',
             table: 'w-full border-collapse space-y-1',
             row: 'flex w-full mt-2',
-            cell: 'flex-1 h-40 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20'
+            cell: 'flex-1 h-24 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20'
         }}
     />
   );
