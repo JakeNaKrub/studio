@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useFormState } from "react-dom";
+import { useEffect, useMemo, useState, useActionState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -75,7 +74,7 @@ const timeSlots = Array.from({ length: 22 }, (_, i) => {
 
 export function ReservationDialog({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
-  const [state, formAction] = useFormState(createReservation, { message: "" });
+  const [state, formAction] = useActionState(createReservation, { message: "" });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
