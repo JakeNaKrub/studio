@@ -2,11 +2,9 @@
 import * as React from "react";
 import type { Reservation } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, List, Calendar as CalendarIcon } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { ReservationDialog } from "@/components/reservations/reservation-dialog";
-import { ReservationsCalendar } from "@/components/reservations/reservations-calendar";
 import { ReservationsList } from "@/components/reservations/reservations-list";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -17,13 +15,6 @@ interface ReservationsPageProps {
 }
 
 export function ReservationsPage({ reservations }: ReservationsPageProps) {
-
-  const upcomingReservations = React.useMemo(() => {
-    return reservations
-      .filter(r => new Date(r.date) > new Date())
-      .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0,5);
-  }, [reservations]);
 
   return (
     <div className="py-4 md:py-10">
@@ -43,32 +34,15 @@ export function ReservationsPage({ reservations }: ReservationsPageProps) {
           </div>
         </div>
 
-        <Tabs defaultValue="calendar" className="w-full">
-          <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">All Reservations</h2>
-              <TabsList className="grid w-full grid-cols-2 md:w-[200px]">
-                  <TabsTrigger value="calendar">
-                  <CalendarIcon className="mr-2" />
-                  Calendar
-                  </TabsTrigger>
-                  <TabsTrigger value="list">
-                  <List className="mr-2" />
-                  List
-                  </TabsTrigger>
-              </TabsList>
-          </div>
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">All Reservations</h2>
+        </div>
 
-          <TabsContent value="calendar">
-              <ReservationsCalendar reservations={reservations} />
-          </TabsContent>
-          <TabsContent value="list">
-              <Card>
-                  <CardContent className="p-0">
-                      <ReservationsList reservations={reservations} />
-                  </CardContent>
-              </Card>
-          </TabsContent>
-        </Tabs>
+        <Card>
+            <CardContent className="p-0">
+                <ReservationsList reservations={reservations} />
+            </CardContent>
+        </Card>
       </div>
     </div>
   );
