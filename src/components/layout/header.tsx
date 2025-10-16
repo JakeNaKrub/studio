@@ -30,9 +30,8 @@ export function Header() {
         <div className="flex items-center gap-2">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Info className="h-5 w-5" />
-                <span className="sr-only">Show Rules</span>
+              <Button variant="ghost">
+                Rules
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
