@@ -357,7 +357,7 @@ export function ReservationDialog({
             </div>
             <DialogFooter className="pt-4">
               <DialogClose asChild>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline">
                   Cancel
                 </Button>
               </DialogClose>
