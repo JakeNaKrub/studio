@@ -71,10 +71,17 @@ type ReservationFormValues = z.infer<typeof ReservationSchema>;
 type UpdateReservationFormValues = z.infer<typeof UpdateReservationSchema>;
 
 
-const timeSlots = Array.from({ length: 14 }, (_, i) => { // 8 AM to 9 PM (21:00)
-    const hour = i + 8;
+const timeSlots = Array.from({ length: 24 }, (_, i) => {
+    const hour = i;
     return `${hour.toString().padStart(2, '0')}:00`;
 });
+
+const end_timeSlots = Array.from({ length: 25 }, (_, i) => {
+    const hour = i;
+    if (hour === 24) return "24:00";
+    return `${hour.toString().padStart(2, '0')}:00`;
+});
+
 
 interface ReservationDialogProps {
   children?: React.ReactNode;
@@ -181,16 +188,20 @@ export function ReservationDialog({
   
   const availableEndTimes = useMemo(() => {
     const startTime = form.watch("startTime");
-    if (!startTime) return timeSlots;
-    return timeSlots.filter(time => time > startTime);
+    if (!startTime) return end_timeSlots;
+    return end_timeSlots.filter(time => time > startTime);
   }, [form.watch("startTime")]);
+
+  const handleOpenChange = (open: boolean) => {
+      setIsDialogOpen(open);
+      if (!open) {
+          form.reset();
+      }
+  }
 
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={(open) => {
-      setIsDialogOpen(open);
-      if (!open) form.reset();
-    }}>
+    <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
