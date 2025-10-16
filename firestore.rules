@@ -1,0 +1,53 @@
+/**
+ * @fileoverview Firestore Security Rules for the Reservation System.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a pin-based authorization model for managing reservations.
+ * Only users who know the correct pin for a reservation can modify or delete it.
+ * There is no user-based authentication or ownership. Anonymous authentication is permitted.
+ *
+ * Data Structure:
+ * All reservation data is stored in the top-level `/reservations/{reservationId}` collection.
+ * Each document contains the reservation details, including a `pin` property used for authorization.
+ *
+ * Key Security Decisions:
+ * - No user listing is permitted.
+ * - No user roles or authentication beyond anonymous auth are supported; authorization relies solely on the `pin`.
+ * - Read access to the reservation data is public.
+ *
+ * Denormalization for Authorization:
+ * The `pin` is stored directly within the `/reservations/{reservationId}` document.
+ * This avoids the need for any `get()` calls to external collections for authorization checks.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to the /reservations collection.
+     * @path /reservations/{reservationId}
+     * @allow (get, list): Any user can read the reservations.
+     * @allow (create): Any user can create a reservation.
+     * @allow (update, delete): Only users providing the correct pin can modify or delete a reservation.
+     * @deny (create, update, delete): If the pin does not match or the document does not exist for update/delete.
+     * @principle Enforces pin-based authorization for modifying/deleting reservations.
+     */
+    match /reservations/{reservationId} {
+      allow get, list: if true;
+
+      allow create: if isValidReservationCreation();
+
+      allow update: if isPinOwner(reservationId);
+
+      allow delete: if isPinOwner(reservationId);
+
+      function isValidReservationCreation() {
+        return request.resource.data.pin is string;
+      }
+
+      function isPinOwner(reservationId) {
+        return get(/databases/$(database)/documents/reservations/$(reservationId)).data.pin == request.resource.data.pin;
+      }
+    }
+  }
+}

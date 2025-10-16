@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "Reservation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Reservation",
+      "type": "object",
+      "description": "Represents a room reservation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the reservation."
+        },
+        "meetingName": {
+          "type": "string",
+          "description": "Name of the meeting."
+        },
+        "personName": {
+          "type": "string",
+          "description": "Name of the person making the reservation."
+        },
+        "mobileNumber": {
+          "type": "string",
+          "description": "Mobile number of the person making the reservation."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of the reservation.",
+          "format": "date-time"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Start time of the reservation.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "End time of the reservation.",
+          "format": "date-time"
+        },
+        "roomSize": {
+          "type": "string",
+          "description": "Size of the room (Large/Small)."
+        },
+        "pin": {
+          "type": "string",
+          "description": "Pin required for editing or deleting the reservation."
+        }
+      },
+      "required": [
+        "id",
+        "meetingName",
+        "personName",
+        "mobileNumber",
+        "date",
+        "startTime",
+        "endTime",
+        "roomSize",
+        "pin"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/reservations/{reservationId}",
+        "definition": {
+          "entityName": "Reservation",
+          "schema": {
+            "$ref": "#/backend/entities/Reservation"
+          },
+          "description": "Stores reservation data. Each document contains all reservation details, including a pin required for editing or deletion.",
+          "params": [
+            {
+              "name": "reservationId",
+              "description": "Unique identifier for the reservation."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to store room reservations securely and efficiently.  All reservation data is stored in a single collection. The structure avoids hierarchical authorization dependencies, ensuring atomic operations are possible. It also supports the required QAPs by segregating reservation data and ensuring each document has a unique reservation ID.\n\nAuthorization Independence: Since there are no roles or user associations with the data, and all data is available based on date and time, no denormalization is required.\n\nStructural Segregation: All documents within the `/reservations` collection share the same security requirements. Therefore, structural segregation is inherently achieved.\n\nAccess Modeling: Data is stored directly in the `/reservations` collection. Access is controlled via security rules based on the reservation's `pin` and date/time.\n\nData Clarity and Predictability: Each reservation's state is implicitly determined by its existence. The schema is predictable, and naming conventions are consistent."
+  }
+}
