@@ -67,10 +67,10 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
         }}
         className="p-0 w-full [&_td]:p-0 [&_tr]:border-0"
         classNames={{
-            head_cell: 'text-muted-foreground rounded-md w-full font-normal text-sm',
+            head_cell: 'flex-1 text-muted-foreground rounded-md font-normal text-sm',
             table: 'w-full border-collapse space-y-1',
             row: 'flex w-full mt-2',
-            cell: 'h-24 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20'
+            cell: 'flex-1 h-40 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20'
         }}
     />
   );
