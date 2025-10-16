@@ -1,5 +1,4 @@
-export interface Reservation {
-  id: string;
+export interface ReservationData {
   meetingName: string;
   personName: string;
   mobileNumber: string;
@@ -8,4 +7,8 @@ export interface Reservation {
   endTime: string; // e.g., "10:00"
   roomSize: "small" | "large";
   pin: string;
+}
+
+export interface Reservation extends ReservationData {
+  id: string;
 }

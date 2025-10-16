@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useActionState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO } from "date-fns";
 
 import { cn } from "@/lib/utils";
-import { createReservation, updateReservation } from "@/lib/actions";
+import { createReservation, updateReservation } from "@/lib/firebase/reservations";
 import { useToast } from "@/hooks/use-toast";
 import type { Reservation } from "@/lib/types";
 
@@ -40,6 +39,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useFirestore } from "@/firebase";
 
 const ReservationBaseSchema = z.object({
   meetingName: z.string().min(3, "Meeting name must be at least 3 characters"),
@@ -81,7 +81,7 @@ interface ReservationDialogProps {
   reservation?: Reservation | null;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onUpdate?: (reservation: Reservation) => void;
+  onSuccess?: (reservation: Reservation) => void;
 }
 
 export function ReservationDialog({ 
@@ -89,14 +89,12 @@ export function ReservationDialog({
   reservation,
   isOpen: controlledIsOpen,
   onOpenChange: controlledOnOpenChange,
-  onUpdate,
+  onSuccess,
 }: ReservationDialogProps) {
+  const firestore = useFirestore();
   const { toast } = useToast();
   
   const isEditMode = !!reservation;
-  const action = isEditMode ? updateReservation : createReservation;
-
-  const [state, formAction] = useActionState(action, { message: "", errors: null, data: null });
 
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const isDialogOpen = controlledIsOpen ?? internalIsOpen;
@@ -104,7 +102,7 @@ export function ReservationDialog({
 
   const form = useForm<ReservationFormValues | UpdateReservationFormValues>({
     resolver: zodResolver(isEditMode ? UpdateReservationSchema : ReservationSchema),
-    defaultValues: isEditMode ? {
+    defaultValues: isEditMode && reservation ? {
       ...reservation,
       date: format(parseISO(reservation.date), "yyyy-MM-dd"),
     } : {
@@ -120,50 +118,65 @@ export function ReservationDialog({
   });
   
   useEffect(() => {
-    form.reset(isEditMode ? {
-        ...reservation,
-        date: format(parseISO(reservation.date), "yyyy-MM-dd"),
-    } : {
-        meetingName: "",
-        personName: "",
-        mobileNumber: "",
-        date: "",
-        startTime: "",
-        endTime: "",
-        roomSize: undefined,
-        pin: "",
-    });
+    if (isDialogOpen) {
+      form.reset(isEditMode && reservation ? {
+          ...reservation,
+          date: format(parseISO(reservation.date), "yyyy-MM-dd"),
+      } : {
+          meetingName: "",
+          personName: "",
+          mobileNumber: "",
+          date: "",
+          startTime: "",
+          endTime: "",
+          roomSize: undefined,
+          pin: "",
+      });
+    }
   }, [reservation, isEditMode, form, isDialogOpen]);
 
-  useEffect(() => {
-    if (state.message.includes("successfully")) {
-      toast({
-        title: "Success!",
-        description: state.message,
-      });
-      if(onUpdate && state.data) {
-        onUpdate(state.data as Reservation);
+  const onFormSubmit = async (data: ReservationFormValues | UpdateReservationFormValues) => {
+    if (!firestore) {
+        toast({
+            title: "Error",
+            description: "Database not available. Please try again later.",
+            variant: "destructive",
+        });
+        return;
+    }
+    try {
+      let resultReservation: Reservation;
+      if (isEditMode && reservation) {
+        const updateData = data as UpdateReservationFormValues;
+        const updatedDoc = await updateReservation(firestore, reservation.id, {
+          ...updateData,
+          date: new Date(updateData.date).toISOString(),
+        });
+        resultReservation = updatedDoc;
+        toast({ title: "Success!", description: "Reservation updated successfully." });
+      } else {
+        const createData = data as ReservationFormValues;
+        const newDoc = await createReservation(firestore, {
+          ...createData,
+          date: new Date(createData.date).toISOString(),
+        });
+        resultReservation = newDoc;
+        toast({ title: "Success!", description: "Reservation created successfully." });
+      }
+      
+      if(onSuccess) {
+        onSuccess(resultReservation);
       }
       form.reset();
       setIsDialogOpen(false);
-    } else if (state.message) {
-      toast({
+
+    } catch (error: any) {
+       toast({
         title: "Error",
-        description: state.message,
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     }
-  }, [state, toast, form, setIsDialogOpen, onUpdate]);
-
-  const onFormSubmit = (data: ReservationFormValues | UpdateReservationFormValues) => {
-    const formData = new FormData();
-    if(isEditMode && reservation) {
-      formData.append("id", reservation.id);
-    }
-    Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, String(value));
-    });
-    formAction(formData);
   };
   
   const availableEndTimes = useMemo(() => {

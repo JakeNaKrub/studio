@@ -15,9 +15,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PinDialog } from "./pin-dialog";
-import { deleteReservation, updateReservation, getReservations } from "@/lib/actions";
+import { deleteReservation, getReservation } from "@/lib/firebase/reservations";
 import { useToast } from "@/hooks/use-toast";
 import { ReservationDialog } from "./reservation-dialog";
+import { useFirestore } from "@/firebase";
 
 interface ReservationsListProps {
   reservations: Reservation[];
@@ -26,6 +27,7 @@ interface ReservationsListProps {
 export function ReservationsList({
   reservations: initialReservations,
 }: ReservationsListProps) {
+  const firestore = useFirestore();
   const [reservations, setReservations] = React.useState(initialReservations);
   const [isPinDialogOpen, setIsPinDialogOpen] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
@@ -50,10 +52,17 @@ export function ReservationsList({
   };
 
   const handlePinSubmit = async (pin: string) => {
-    if (!selectedReservation) return;
+    if (!selectedReservation || !firestore) return;
 
-    // Check PIN validity (client-side check for immediate feedback)
-    const isValidPin = pin.toUpperCase() === 'ITISESC' || pin === selectedReservation.pin;
+    // Fetch the latest reservation data to verify the PIN
+    const latestReservation = await getReservation(firestore, selectedReservation.id);
+    if (!latestReservation) {
+        toast({ title: "Error", description: "Reservation not found.", variant: "destructive" });
+        setIsPinDialogOpen(false);
+        return;
+    }
+
+    const isValidPin = pin.toUpperCase() === 'ITISESC' || pin === latestReservation.pin;
     if (!isValidPin) {
       toast({
         title: "Error",
@@ -66,36 +75,28 @@ export function ReservationsList({
     setIsPinDialogOpen(false);
 
     if (pinDialogAction === 'delete') {
-      const formData = new FormData();
-      formData.append("id", selectedReservation.id);
-      formData.append("pin", pin);
-
-      const result = await deleteReservation(null, formData);
-
-      if (result.message.includes("successfully")) {
+      try {
+        await deleteReservation(firestore, selectedReservation.id);
         toast({
           title: "Success",
-          description: result.message,
+          description: "Reservation deleted successfully.",
         });
-        setReservations((prev) =>
-          prev.filter((r) => r.id !== selectedReservation.id)
-        );
-      } else {
+      } catch (error: any) {
         toast({
           title: "Error",
-          description: result.message,
+          description: error.message || "Could not delete reservation.",
           variant: "destructive",
         });
       }
     } else if (pinDialogAction === 'edit') {
+       setSelectedReservation(latestReservation); // Use fresh data
        setIsEditDialogOpen(true);
     }
-    // No need to reset selectedReservation here as the edit dialog might need it.
   };
   
-  const onUpdate = (updatedReservation: Reservation) => {
-    setReservations(reservations.map(r => r.id === updatedReservation.id ? updatedReservation : r));
-    setSelectedReservation(null); // Clear after update
+  const onUpdateSuccess = () => {
+    // The useCollection hook will update the list automatically
+    handleDialogClose();
   };
   
   const handleDialogClose = () => {
@@ -194,7 +195,7 @@ export function ReservationsList({
             isOpen={isEditDialogOpen}
             onOpenChange={handleDialogClose}
             reservation={selectedReservation}
-            onUpdate={onUpdate}
+            onSuccess={onUpdateSuccess}
         >
             <></>
         </ReservationDialog>

@@ -1,10 +1,23 @@
-import { getReservations } from '@/lib/actions';
+"use client";
+import { useMemoFirebase } from "@/firebase/provider";
+import { collection, query, orderBy } from "firebase/firestore";
+import { useCollection, useFirestore } from "@/firebase";
+import type { Reservation } from "@/lib/types";
 import { ReservationsCalendar } from '@/components/reservations/reservations-calendar';
 
-export const dynamic = "force-dynamic";
+export default function CalendarPage() {
+  const firestore = useFirestore();
 
-export default async function CalendarPage() {
-  const reservations = await getReservations();
+  const reservationsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "reservations"), orderBy("date", "desc"));
+  }, [firestore]);
+
+  const { data: reservations, isLoading } = useCollection<Reservation>(reservationsQuery);
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="container mx-auto py-10">
@@ -12,7 +25,7 @@ export default async function CalendarPage() {
       <p className="text-muted-foreground mb-8">
         Visualize all bookings and select a date to see its schedule.
       </p>
-      <ReservationsCalendar reservations={reservations} />
+      <ReservationsCalendar reservations={reservations || []} />
     </div>
   );
 }
