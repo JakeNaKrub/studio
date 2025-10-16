@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFormState } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -76,6 +76,9 @@ const timeSlots = Array.from({ length: 22 }, (_, i) => {
 export function ReservationDialog({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [state, formAction] = useFormState(createReservation, { message: "" });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
   const form = useForm<ReservationFormValues>({
     resolver: zodResolver(ReservationSchema),
     defaultValues: {
@@ -96,9 +99,8 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
         description: state.message,
       });
       form.reset();
-      // Consider closing dialog here
+      setIsDialogOpen(false);
     } else if (state.message) {
-      // This is for top-level errors, not field errors
       toast({
         title: "Error",
         description: state.message,
@@ -127,7 +129,10 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
 
 
   return (
-    <Dialog onOpenChange={(open) => !open && form.reset()}>
+    <Dialog open={isDialogOpen} onOpenChange={(open) => {
+      setIsDialogOpen(open);
+      if (!open) form.reset();
+    }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
@@ -189,7 +194,7 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
                 render={({ field }) => (
                   <FormItem className="flex flex-col pt-2">
                     <FormLabel>Date</FormLabel>
-                    <Popover>
+                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -212,8 +217,11 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date() || date < new Date("1900-01-01")}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setIsCalendarOpen(false);
+                          }}
+                          disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || date < new Date("1900-01-01")}
                           initialFocus
                         />
                       </PopoverContent>
