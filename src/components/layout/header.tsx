@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Sidebar } from "./sidebar";
 
 export function Header() {
   // A full theme toggle implementation is out of scope.
@@ -24,7 +25,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center">
+        <div className="md:hidden">
+            <Sidebar />
+        </div>
+        <Link href="/" className="hidden md:flex items-center">
           <span className="font-bold text-lg font-headline">Common-Room Booking</span>
         </Link>
         <div className="flex items-center gap-2">
