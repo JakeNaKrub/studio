@@ -6,14 +6,20 @@ import type { Reservation } from "@/lib/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Building2 } from "lucide-react";
+import { Clock, Users, Building2, Calendar as CalendarIcon } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "../ui/button";
 
 interface ReservationsCalendarProps {
   reservations: Reservation[];
 }
 
 export function ReservationsCalendar({ reservations }: ReservationsCalendarProps) {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [month, setMonth] = React.useState<Date>(new Date());
 
   const reservationsByDay = React.useMemo(() => {
     return reservations.reduce((acc, reservation) => {
@@ -26,86 +32,91 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
     }, {} as Record<string, Reservation[]>);
   }, [reservations]);
 
-  const selectedDayReservations = date
-    ? reservationsByDay[format(date, "yyyy-MM-dd")] || []
-    : [];
 
-  const modifiers = {
-    hasReservation: (day: Date) => {
-      return !!reservationsByDay[format(day, "yyyy-MM-dd")];
-    },
-  };
+  const DayWithReservations = (day: Date) => {
+    const dayStr = format(day, "yyyy-MM-dd");
+    const dayReservations = reservationsByDay[dayStr] || [];
 
-  const modifiersStyles = {
-    hasReservation: {
-      fontWeight: "bold",
-      color: "hsl(var(--primary))",
-    },
-  };
+    if (dayReservations.length === 0) {
+      return (
+        <div className="relative w-full h-full flex items-center justify-center">
+            {format(day, 'd')}
+        </div>
+      );
+    }
+    
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" className="w-full h-full flex flex-col items-center justify-center p-0 rounded-md hover:bg-accent focus:bg-accent-foreground/10 relative">
+                    <span className="font-bold">{format(day, 'd')}</span>
+                    <div className="text-xs text-muted-foreground -mt-1">{dayReservations.length} bkngs</div>
+                    <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary"></div>
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+                 <CardHeader className="p-2">
+                    <CardTitle className="text-lg">
+                        Schedule for {format(day, "PPP")}
+                    </CardTitle>
+                    <CardDescription>
+                        {dayReservations.length} reservation(s)
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="p-2">
+                <ul className="space-y-2">
+                  {dayReservations
+                    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                    .map((res) => (
+                      <li key={res.id} className="p-3 rounded-lg border bg-card text-sm">
+                        <p className="font-semibold">{res.meetingName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          by {res.personName}
+                        </p>
+                        <div className="flex items-center justify-between mt-2 text-xs">
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {res.startTime} - {res.endTime}
+                            </span>
+                          </div>
+                          <Badge
+                            variant={
+                              res.roomSize === "large" ? "default" : "secondary"
+                            }
+                            className="capitalize flex items-center gap-1 text-xs"
+                          >
+                            <Users className="h-3 w-3" /> {res.roomSize}
+                          </Badge>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+                </CardContent>
+            </PopoverContent>
+        </Popover>
+    )
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <Card className="lg:col-span-2">
+    <Card>
         <CardContent className="p-0 md:p-6 flex justify-center">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            className="rounded-md border"
-            modifiers={modifiers}
-            modifiersStyles={modifiersStyles}
-          />
+            <Calendar
+                month={month}
+                onMonthChange={setMonth}
+                components={{
+                    Day: ({ date }) => DayWithReservations(date),
+                }}
+                className="rounded-md border p-0 [&_td]:p-0 [&_tr]:border-0"
+                classNames={{
+                    day: 'h-20 w-20 text-center text-sm p-0 relative focus-within:relative focus-within:z-20',
+                    head_cell: 'text-muted-foreground rounded-md w-20 font-normal text-sm',
+                    table: 'w-full border-collapse space-y-1',
+                    row: 'flex w-full mt-2',
+                    cell: 'h-20 w-20 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20'
+                }}
+            />
         </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Schedule for {date ? format(date, "PPP") : "..."}
-          </CardTitle>
-           <CardDescription>
-            {selectedDayReservations.length} reservation(s)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {selectedDayReservations.length > 0 ? (
-            <ul className="space-y-4">
-              {selectedDayReservations
-                .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                .map((res) => (
-                  <li key={res.id} className="p-4 rounded-lg border bg-card">
-                    <p className="font-semibold">{res.meetingName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      by {res.personName}
-                    </p>
-                    <div className="flex items-center justify-between mt-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span>
-                          {res.startTime} - {res.endTime}
-                        </span>
-                      </div>
-                      <Badge
-                        variant={
-                          res.roomSize === "large" ? "default" : "secondary"
-                        }
-                        className="capitalize flex items-center gap-1"
-                      >
-                        <Users className="h-3 w-3" /> {res.roomSize}
-                      </Badge>
-                    </div>
-                  </li>
-                ))}
-            </ul>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center h-48">
-              <Building2 className="h-12 w-12 text-muted-foreground" />
-              <p className="mt-4 text-muted-foreground">
-                No reservations for this day.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    </Card>
   );
 }
