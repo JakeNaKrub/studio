@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/header';
 import { FirebaseClientProvider } from '@/firebase';
-import { Sidebar } from '@/components/layout/sidebar'; // Import Sidebar
 
 export const metadata: Metadata = {
   title: 'Common-Room Booking',
@@ -34,12 +33,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <div className="relative flex min-h-screen flex-col">
             <Header />
-            <div className="flex flex-1">
-              <aside className="hidden md:block md:w-64">
-                <Sidebar />
-              </aside>
-              <main className="flex-1 container pt-16">{children}</main>
-            </div>
+            <main className="flex-1 container pt-16">{children}</main>
             <footer className="py-6 md:px-8 md:py-0">
                 <div className="container flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row">
                     <p className="text-center text-sm leading-loose text-muted-foreground">

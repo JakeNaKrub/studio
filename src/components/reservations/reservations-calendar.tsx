@@ -1,12 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { format, isSameDay, parseISO } from "date-fns";
+import { format } from "date-fns";
 import type { Reservation } from "@/lib/types";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Edit, Trash2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Popover,
   PopoverContent,
@@ -21,11 +19,10 @@ interface ReservationsCalendarProps {
 
 export function ReservationsCalendar({ reservations }: ReservationsCalendarProps) {
   const [month, setMonth] = React.useState<Date>(new Date());
-  const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
 
   const reservationsByDay = React.useMemo(() => {
     return reservations.reduce((acc, reservation) => {
-      const day = format(parseISO(reservation.date), "yyyy-MM-dd");
+      const day = reservation.date.split('T')[0];
       if (!acc[day]) {
         acc[day] = [];
       }
@@ -55,7 +52,7 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
               <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary"></div>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-96 p-0">
+        <PopoverContent className="w-full max-w-sm p-0">
           <ReservationsList reservations={dayReservations} />
         </PopoverContent>
       </Popover>
@@ -65,20 +62,19 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
 
   return (
     <Card>
-        <CardContent className="p-0 md:p-6 flex justify-center">
+        <CardContent className="p-2 md:p-6 flex justify-center">
             <Calendar
                 month={month}
                 onMonthChange={setMonth}
                 components={{
                     Day: ({ date }) => DayWithReservations(date),
                 }}
-                className="rounded-md border p-0 [&_td]:p-0 [&_tr]:border-0"
+                className="p-0 [&_td]:p-0 [&_tr]:border-0"
                 classNames={{
-                    day: 'h-20 w-20 text-center text-sm p-0 relative focus-within:relative focus-within:z-20',
-                    head_cell: 'text-muted-foreground rounded-md w-20 font-normal text-sm',
+                    head_cell: 'text-muted-foreground rounded-md w-full font-normal text-sm',
                     table: 'w-full border-collapse space-y-1',
                     row: 'flex w-full mt-2',
-                    cell: 'h-20 w-20 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20'
+                    cell: 'h-16 md:h-20 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20'
                 }}
             />
         </CardContent>

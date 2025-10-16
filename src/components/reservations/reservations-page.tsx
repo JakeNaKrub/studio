@@ -11,25 +11,20 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import { useMobile } from "@/hooks/use-mobile";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface ReservationsPageProps {
   reservations: Reservation[];
 }
 
 export function ReservationsPage({ reservations }: ReservationsPageProps) {
-  const isMobile = useMobile();
 
   return (
-    <div className="container mx-auto py-10 px-4 md:px-6">
+    <div className="container mx-auto py-4 md:py-10 px-4 md:px-6">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
-        {!isMobile && (
-          <div>
-            <h1 className="text-3xl font-bold font-headline">Reservations</h1>
-            <p className="text-muted-foreground">Manage common room bookings</p>
-          </div>
-        )}
+        <div>
+          <h1 className="text-3xl font-bold font-headline">Reservations</h1>
+          <p className="text-muted-foreground">Manage common room bookings</p>
+        </div>
         <ReservationDialog>
           <Button>
             <PlusCircle className="mr-2" />
@@ -41,32 +36,16 @@ export function ReservationsPage({ reservations }: ReservationsPageProps) {
       <Tabs defaultValue="calendar" className="w-full">
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">All Reservations</h2>
-            {isMobile ? (
-              <ScrollArea className="w-48 whitespace-nowrap">
-                <TabsList>
-                    <TabsTrigger value="calendar">
-                    <CalendarIcon className="mr-2" />
-                    Calendar
-                    </TabsTrigger>
-                    <TabsTrigger value="list">
-                    <List className="mr-2" />
-                    List
-                    </TabsTrigger>
-                </TabsList>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-            ) : (
-              <TabsList>
-                  <TabsTrigger value="calendar">
-                  <CalendarIcon className="mr-2" />
-                  Calendar
-                  </TabsTrigger>
-                  <TabsTrigger value="list">
-                  <List className="mr-2" />
-                  List
-                  </TabsTrigger>
-              </TabsList>
-            )}
+            <TabsList className="grid w-full grid-cols-2 md:w-[200px]">
+                <TabsTrigger value="calendar">
+                <CalendarIcon className="mr-2" />
+                Calendar
+                </TabsTrigger>
+                <TabsTrigger value="list">
+                <List className="mr-2" />
+                List
+                </TabsTrigger>
+            </TabsList>
         </div>
 
         <TabsContent value="calendar">

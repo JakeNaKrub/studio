@@ -19,6 +19,7 @@ import { deleteReservation, getReservation } from "@/lib/firebase/reservations";
 import { useToast } from "@/hooks/use-toast";
 import { ReservationDialog } from "./reservation-dialog";
 import { useFirestore } from "@/firebase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ReservationsListProps {
   reservations: Reservation[];
@@ -103,87 +104,143 @@ export function ReservationsList({
     setIsEditDialogOpen(false);
     setSelectedReservation(null);
   }
+  
+  if (reservations.length === 0) {
+    return (
+        <div className="text-center h-24 flex items-center justify-center">
+            <p>No reservations found.</p>
+        </div>
+    );
+  }
 
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Meeting Name</TableHead>
-            <TableHead>Details</TableHead>
-            <TableHead>Room</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {reservations.length > 0 ? (
-            reservations.map((reservation) => (
-              <TableRow key={reservation.id}>
+      <div className="md:hidden space-y-4 p-4">
+        {reservations.map((reservation) => (
+          <Card key={reservation.id}>
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                <span className="text-lg">{reservation.meetingName}</span>
+                <Badge
+                  variant={reservation.roomSize === 'large' ? 'default' : 'secondary'}
+                  className="capitalize flex items-center gap-1"
+                >
+                  <Users className="h-3 w-3" /> {reservation.roomSize}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span>{reservation.personName}</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Phone className="h-4 w-4" />
+                <span>{reservation.mobileNumber}</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>{format(new Date(reservation.date), "PPP")}</span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>{`${reservation.startTime} - ${reservation.endTime}`}</span>
+              </div>
+                <div className="flex justify-end pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditClick(reservation)}
+                  className="mr-2"
+                >
+                  <Edit className="h-4 w-4 mr-1" /> Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteClick(reservation)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" /> Delete
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      <div className="hidden md:block">
+        <Table>
+            <TableHeader>
+            <TableRow>
+                <TableHead>Meeting Name</TableHead>
+                <TableHead>Details</TableHead>
+                <TableHead>Room</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+            </TableHeader>
+            <TableBody>
+            {reservations.map((reservation) => (
+                <TableRow key={reservation.id}>
                 <TableCell className="font-medium">
-                  {reservation.meetingName}
+                    {reservation.meetingName}
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      <span>{reservation.personName}</span>
+                        <User className="h-4 w-4" />
+                        <span>{reservation.personName}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Phone className="h-4 w-4" />
                         <span>{reservation.mobileNumber}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>{format(new Date(reservation.date), "PPP")}</span>
+                        <Calendar className="h-4 w-4" />
+                        <span>{format(new Date(reservation.date), "PPP")}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>{`${reservation.startTime} - ${reservation.endTime}`}</span>
+                        <Clock className="h-4 w-4" />
+                        <span>{`${reservation.startTime} - ${reservation.endTime}`}</span>
                     </div>
-                  </div>
+                    </div>
                 </TableCell>
                 <TableCell>
-                  <Badge
+                    <Badge
                     variant={
-                      reservation.roomSize === "large"
+                        reservation.roomSize === "large"
                         ? "default"
                         : "secondary"
                     }
                     className="capitalize flex items-center gap-1"
-                  >
+                    >
                     <Users className="h-3 w-3" /> {reservation.roomSize}
-                  </Badge>
+                    </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                   <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEditClick(reservation)}
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteClick(reservation)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditClick(reservation)}
+                    >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(reservation)}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                    </Button>
                 </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={4} className="text-center h-24">
-                No reservations found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+                </TableRow>
+            ))}
+            </TableBody>
+        </Table>
+      </div>
+
       <PinDialog
         isOpen={isPinDialogOpen}
         onOpenChange={setIsPinDialogOpen}
