@@ -26,14 +26,14 @@ export function ReservationsPage({ reservations }: ReservationsPageProps) {
   }, [reservations]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-8 py-4 md:py-10">
-      <div className="lg:col-span-2">
+    <div className="py-4 md:py-10">
+      <div>
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold font-headline">Reservations</h1>
             <p className="text-muted-foreground">Manage common room bookings</p>
           </div>
-          <div className="lg:hidden">
+          <div>
             <ReservationDialog>
               <Button className="w-full">
                 <PlusCircle className="mr-2" />
@@ -69,27 +69,6 @@ export function ReservationsPage({ reservations }: ReservationsPageProps) {
               </Card>
           </TabsContent>
         </Tabs>
-      </div>
-      <div className="hidden lg:block lg:col-span-1">
-        <div className="sticky top-24 space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">Actions</h2>
-            <ReservationDialog>
-              <Button className="w-full">
-                <PlusCircle className="mr-2" />
-                Create Reservation
-              </Button>
-            </ReservationDialog>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold mb-4">Upcoming Reservations</h3>
-            <Card>
-                <CardContent className="p-0">
-                    <ReservationsList reservations={upcomingReservations} />
-                </CardContent>
-            </Card>
-          </div>
-        </div>
       </div>
     </div>
   );
