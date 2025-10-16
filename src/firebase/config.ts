@@ -1,4 +1,4 @@
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyC0grqcPMScaxUNRD-YaLpo3b-Y_M87cbQ",
   authDomain: "commonroom-reserve.firebaseapp.com",
   projectId: "commonroom-reserve",
