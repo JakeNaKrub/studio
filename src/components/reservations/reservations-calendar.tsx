@@ -62,14 +62,14 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
 
   return (
     <Card>
-        <CardContent className="p-4 md:p-6 flex justify-center">
+        <CardContent className="p-4 md:p-6 flex">
             <Calendar
                 month={month}
                 onMonthChange={setMonth}
                 components={{
                     Day: ({ date }) => DayWithReservations(date),
                 }}
-                className="p-0 [&_td]:p-0 [&_tr]:border-0"
+                className="p-0 w-full [&_td]:p-0 [&_tr]:border-0"
                 classNames={{
                     head_cell: 'text-muted-foreground rounded-md w-full font-normal text-sm',
                     table: 'w-full border-collapse space-y-1',
