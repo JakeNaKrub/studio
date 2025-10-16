@@ -71,16 +71,13 @@ type ReservationFormValues = z.infer<typeof ReservationSchema>;
 type UpdateReservationFormValues = z.infer<typeof UpdateReservationSchema>;
 
 
-const timeSlots = Array.from({ length: 24 }, (_, i) => {
-    const hour = i;
-    return `${hour.toString().padStart(2, '0')}:00`;
+const timeSlots = Array.from({ length: 48 }, (_, i) => {
+    const hour = Math.floor(i / 2);
+    const minute = i % 2 === 0 ? '00' : '30';
+    return `${hour.toString().padStart(2, '0')}:${minute}`;
 });
 
-const end_timeSlots = Array.from({ length: 25 }, (_, i) => {
-    const hour = i;
-    if (hour === 24) return "24:00";
-    return `${hour.toString().padStart(2, '0')}:00`;
-});
+const end_timeSlots = [...timeSlots, "24:00"];
 
 
 interface ReservationDialogProps {
