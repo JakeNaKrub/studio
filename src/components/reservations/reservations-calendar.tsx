@@ -4,7 +4,7 @@ import * as React from "react";
 import { format, isSameDay, parseISO } from "date-fns";
 import type { Reservation } from "@/lib/types";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, Building2 } from "lucide-react";
 
@@ -46,12 +46,12 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <Card className="lg:col-span-2">
-        <CardContent className="p-2 md:p-6 flex justify-center">
+        <CardContent className="p-0 md:p-6 flex justify-center">
           <Calendar
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="rounded-md"
+            className="rounded-md border"
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
           />
@@ -62,6 +62,9 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
           <CardTitle>
             Schedule for {date ? format(date, "PPP") : "..."}
           </CardTitle>
+           <CardDescription>
+            {selectedDayReservations.length} reservation(s)
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {selectedDayReservations.length > 0 ? (

@@ -5,8 +5,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/header';
 
 export const metadata: Metadata = {
-  title: 'CommonRoom Reservation',
-  description: 'Reserve a common room for your meetings and events.',
+  title: 'Common-Room Booking',
+  description: 'Manage common room bookings.',
 };
 
 export default function RootLayout({
