@@ -20,7 +20,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="py-10">
       <h1 className="text-3xl font-bold font-headline mb-2">Calendar View</h1>
       <p className="text-muted-foreground mb-8">
         Visualize all bookings and select a date to see its schedule.
