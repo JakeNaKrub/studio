@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -47,7 +47,7 @@ const ReservationBaseSchema = z.object({
   personName: z.string().min(2, "Person name must be at least 2 characters"),
   mobileNumber: z
     .string()
-    .regex(/^\d{3}-\d{3}-\d{4}$/, "Use format XXX-XXX-XXXX"),
+    .regex(/^\d{10}$/, "Mobile number must be 10 digits"),
   date: z.string().min(1, "Please select a date."),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
@@ -249,7 +249,7 @@ export function ReservationDialog({
                     <FormItem>
                       <FormLabel>Mobile Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="123-456-7890" {...field} />
+                        <Input placeholder="1234567890" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,7 +294,7 @@ export function ReservationDialog({
                   render={({ field }) => (
                     <FormItem className="pt-2">
                       <FormLabel>End Time</FormLabel>
-                      <Select onValue-change={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select end time" />
