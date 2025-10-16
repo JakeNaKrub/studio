@@ -71,8 +71,8 @@ type ReservationFormValues = z.infer<typeof ReservationSchema>;
 type UpdateReservationFormValues = z.infer<typeof UpdateReservationSchema>;
 
 
-const timeSlots = Array.from({ length: 22 }, (_, i) => {
-    const hour = i + 8; // 8 AM to 5 PM (17:00)
+const timeSlots = Array.from({ length: 14 }, (_, i) => { // 8 AM to 9 PM (21:00)
+    const hour = i + 8;
     return `${hour.toString().padStart(2, '0')}:00`;
 });
 
