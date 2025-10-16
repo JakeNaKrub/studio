@@ -33,9 +33,9 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <div className="relative flex min-h-screen flex-col">
             <Header />
-            <main className="flex-1 container pt-16">{children}</main>
+            <main className="flex-1 container mx-auto pt-16">{children}</main>
             <footer className="py-6 md:px-8 md:py-0">
-                <div className="container flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row">
+                <div className="container mx-auto flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row">
                     <p className="text-center text-sm leading-loose text-muted-foreground">
                         Made by IT, ISESC 2025
                     </p>
