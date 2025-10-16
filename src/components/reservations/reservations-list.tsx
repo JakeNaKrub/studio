@@ -55,7 +55,6 @@ export function ReservationsList({
   const handlePinSubmit = async (pin: string) => {
     if (!selectedReservation || !firestore) return;
 
-    // Fetch the latest reservation data to verify the PIN
     const latestReservation = await getReservation(firestore, selectedReservation.id);
     if (!latestReservation) {
         toast({ title: "Error", description: "Reservation not found.", variant: "destructive" });
@@ -90,13 +89,12 @@ export function ReservationsList({
         });
       }
     } else if (pinDialogAction === 'edit') {
-       setSelectedReservation(latestReservation); // Use fresh data
+       setSelectedReservation(latestReservation); 
        setIsEditDialogOpen(true);
     }
   };
   
   const onUpdateSuccess = () => {
-    // The useCollection hook will update the list automatically
     handleDialogClose();
   };
   
@@ -130,7 +128,7 @@ export function ReservationsList({
                 </Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
+            <CardContent className="space-y-3 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <User className="h-4 w-4" />
                 <span>{reservation.personName}</span>
@@ -147,7 +145,7 @@ export function ReservationsList({
                 <Clock className="h-4 w-4" />
                 <span>{`${reservation.startTime} - ${reservation.endTime}`}</span>
               </div>
-                <div className="flex justify-end pt-2">
+                <div className="flex justify-end pt-4">
                 <Button
                   variant="outline"
                   size="sm"
@@ -186,7 +184,7 @@ export function ReservationsList({
                     {reservation.meetingName}
                 </TableCell>
                 <TableCell>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <User className="h-4 w-4" />
                         <span>{reservation.personName}</span>

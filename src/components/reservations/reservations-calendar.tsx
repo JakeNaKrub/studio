@@ -62,7 +62,7 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
 
   return (
     <Card>
-        <CardContent className="p-2 md:p-6 flex justify-center">
+        <CardContent className="p-4 md:p-6 flex justify-center">
             <Calendar
                 month={month}
                 onMonthChange={setMonth}
@@ -74,7 +74,7 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
                     head_cell: 'text-muted-foreground rounded-md w-full font-normal text-sm',
                     table: 'w-full border-collapse space-y-1',
                     row: 'flex w-full mt-2',
-                    cell: 'h-16 md:h-20 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20'
+                    cell: 'h-24 w-full text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20'
                 }}
             />
         </CardContent>
