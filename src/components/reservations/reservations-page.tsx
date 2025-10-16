@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import * as React from "react";
 import type { Reservation } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ export function ReservationsPage({ reservations }: ReservationsPageProps) {
 
   return (
     <div className="py-4 md:py-10">
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8 px-4 md:px-6">
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold font-headline">Reservations</h1>
           <p className="text-muted-foreground">Manage common room bookings</p>
@@ -34,7 +34,7 @@ export function ReservationsPage({ reservations }: ReservationsPageProps) {
       </div>
 
       <Tabs defaultValue="calendar" className="w-full">
-        <div className="flex justify-between items-center mb-4 px-4 md:px-6">
+        <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">All Reservations</h2>
             <TabsList className="grid w-full grid-cols-2 md:w-[200px]">
                 <TabsTrigger value="calendar">
