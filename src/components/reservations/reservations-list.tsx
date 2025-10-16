@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { Trash2, Users, Clock, Calendar, User, Phone } from "lucide-react";
+import { Trash2, Users, Clock, Calendar, User, Phone, Edit } from "lucide-react";
 import type { Reservation } from "@/lib/types";
 import {
   Table,
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { PinDialog } from "./pin-dialog";
 import { deleteReservation } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
+import { ReservationDialog } from "./reservation-dialog";
 
 interface ReservationsListProps {
   reservations: Reservation[];
@@ -27,25 +28,29 @@ export function ReservationsList({
 }: ReservationsListProps) {
   const [reservations, setReservations] = React.useState(initialReservations);
   const [isPinDialogOpen, setIsPinDialogOpen] = React.useState(false);
-  const [selectedReservationId, setSelectedReservationId] = React.useState<
-    string | null
-  >(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [selectedReservation, setSelectedReservation] = React.useState<Reservation | null>(null);
   const { toast } = useToast();
 
   React.useEffect(() => {
     setReservations(initialReservations);
   }, [initialReservations]);
 
-  const handleDeleteClick = (id: string) => {
-    setSelectedReservationId(id);
+  const handleDeleteClick = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
     setIsPinDialogOpen(true);
   };
 
+  const handleEditClick = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
+    setIsEditDialogOpen(true);
+  };
+
   const handlePinSubmit = async (pin: string) => {
-    if (!selectedReservationId) return;
+    if (!selectedReservation) return;
 
     const formData = new FormData();
-    formData.append("id", selectedReservationId);
+    formData.append("id", selectedReservation.id);
     formData.append("pin", pin);
 
     const result = await deleteReservation(null, formData);
@@ -56,7 +61,7 @@ export function ReservationsList({
         description: result.message,
       });
       setReservations((prev) =>
-        prev.filter((r) => r.id !== selectedReservationId)
+        prev.filter((r) => r.id !== selectedReservation.id)
       );
     } else {
       toast({
@@ -66,8 +71,13 @@ export function ReservationsList({
       });
     }
     setIsPinDialogOpen(false);
-    setSelectedReservationId(null);
+    setSelectedReservation(null);
   };
+  
+  const onUpdate = (updatedReservation: Reservation) => {
+    setReservations(reservations.map(r => r.id === updatedReservation.id ? updatedReservation : r));
+  };
+
 
   return (
     <>
@@ -120,10 +130,18 @@ export function ReservationsList({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                   <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEditClick(reservation)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDeleteClick(reservation.id)}
+                    onClick={() => handleDeleteClick(reservation)}
                   >
                     <Trash2 className="h-4 w-4" />
                     <span className="sr-only">Delete</span>
@@ -145,6 +163,16 @@ export function ReservationsList({
         onOpenChange={setIsPinDialogOpen}
         onSubmit={handlePinSubmit}
       />
+       {selectedReservation && (
+        <ReservationDialog
+            isOpen={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            reservation={selectedReservation}
+            onUpdate={onUpdate}
+        >
+            <></>
+        </ReservationDialog>
+      )}
     </>
   );
 }

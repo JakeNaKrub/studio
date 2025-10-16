@@ -14,8 +14,13 @@ const ReservationSchema = z.object({
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
   roomSize: z.enum(["small", "large"]),
-  pin: z.string().length(4, "PIN must be 4 digits"),
+  pin: z.string().min(4, "PIN must be at least 4 digits"),
 });
+
+const UpdateReservationSchema = ReservationSchema.extend({
+    id: z.string(),
+});
+
 
 const PinSchema = z.object({
   id: z.string(),
@@ -76,6 +81,57 @@ export async function createReservation(prevState: any, formData: FormData) {
   return { message: "Reservation created successfully.", data: newReservation };
 }
 
+export async function updateReservation(prevState: any, formData: FormData) {
+    const rawData = {
+        id: formData.get("id"),
+        meetingName: formData.get("meetingName"),
+        personName: formData.get("personName"),
+        mobileNumber: formData.get("mobileNumber"),
+        date: formData.get("date"),
+        startTime: formData.get("startTime"),
+        endTime: formData.get("endTime"),
+        roomSize: formData.get("roomSize"),
+        pin: formData.get("pin"),
+    };
+
+    const validatedFields = UpdateReservationSchema.safeParse(rawData);
+
+    if (!validatedFields.success) {
+        return { message: "Validation failed.", errors: validatedFields.error.flatten().fieldErrors };
+    }
+    
+    const { id, date, pin, ...rest } = validatedFields.data;
+
+    const reservationIndex = db.reservations.findIndex((r) => r.id === id);
+
+    if (reservationIndex === -1) {
+        return { message: "Reservation not found." };
+    }
+
+    const originalReservation = db.reservations[reservationIndex];
+
+    if (pin.toUpperCase() !== ADMIN_PIN && pin !== originalReservation.pin) {
+        return { message: "Invalid PIN." };
+    }
+
+    const updatedReservation: Reservation = {
+        ...originalReservation,
+        ...rest,
+        date: new Date(date).toISOString(),
+        // Keep original pin if a new one isn't provided, or if the admin pin was used
+        pin: originalReservation.pin,
+    };
+    
+    db.reservations[reservationIndex] = updatedReservation;
+
+    revalidatePath("/reservations/list");
+    revalidatePath("/reservations/calendar");
+    revalidatePath("/");
+
+    return { message: "Reservation updated successfully.", data: updatedReservation };
+}
+
+
 export async function deleteReservation(prevState: any, formData: FormData) {
   const validatedFields = PinSchema.safeParse({
     id: formData.get("id"),
@@ -100,7 +156,7 @@ export async function deleteReservation(prevState: any, formData: FormData) {
   const reservation = db.reservations[reservationIndex];
   
   // Check if the provided PIN is the admin PIN or the correct reservation PIN
-  if (pin !== ADMIN_PIN && pin !== reservation.pin) {
+  if (pin.toUpperCase() !== ADMIN_PIN && pin !== reservation.pin) {
     return { message: "Invalid PIN." };
   }
 

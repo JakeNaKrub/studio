@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState, useActionState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 import { cn } from "@/lib/utils";
-import { createReservation } from "@/lib/actions";
+import { createReservation, updateReservation } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
+import type { Reservation } from "@/lib/types";
 
 import {
   Dialog,
@@ -51,7 +52,7 @@ const ReservationSchema = z.object({
   roomSize: z.enum(["small", "large"], {
     required_error: "You need to select a room size.",
   }),
-  pin: z.string().length(4, "PIN must be 4 digits."),
+  pin: z.string().min(4, "PIN must be at least 4 digits."),
 })
 .refine((data) => data.startTime < data.endTime, {
     message: "End time must be after start time",
@@ -65,14 +66,39 @@ const timeSlots = Array.from({ length: 22 }, (_, i) => {
     return `${hour.toString().padStart(2, '0')}:00`;
 });
 
-export function ReservationDialog({ children }: { children: React.ReactNode }) {
+interface ReservationDialogProps {
+  children?: React.ReactNode;
+  reservation?: Reservation | null;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onUpdate?: (reservation: Reservation) => void;
+}
+
+export function ReservationDialog({ 
+  children,
+  reservation,
+  isOpen: controlledIsOpen,
+  onOpenChange: controlledOnOpenChange,
+  onUpdate,
+}: ReservationDialogProps) {
   const { toast } = useToast();
-  const [state, formAction] = useActionState(createReservation, { message: "" });
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const isEditMode = !!reservation;
+  const action = isEditMode ? updateReservation : createReservation;
+
+  const [state, formAction] = useActionState(action, { message: "", errors: null, data: null });
+
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isDialogOpen = controlledIsOpen ?? internalIsOpen;
+  const setIsDialogOpen = controlledOnOpenChange ?? setInternalIsOpen;
 
   const form = useForm<ReservationFormValues>({
     resolver: zodResolver(ReservationSchema),
-    defaultValues: {
+    defaultValues: isEditMode ? {
+      ...reservation,
+      date: format(parseISO(reservation.date), "yyyy-MM-dd"),
+      pin: "", // Clear pin for security
+    } : {
       meetingName: "",
       personName: "",
       mobileNumber: "",
@@ -83,6 +109,23 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
       pin: "",
     },
   });
+  
+  useEffect(() => {
+    form.reset(isEditMode ? {
+        ...reservation,
+        date: format(parseISO(reservation.date), "yyyy-MM-dd"),
+        pin: ""
+    } : {
+        meetingName: "",
+        personName: "",
+        mobileNumber: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+        roomSize: undefined,
+        pin: "",
+    });
+  }, [reservation, isEditMode, form]);
 
   useEffect(() => {
     if (state.message.includes("successfully")) {
@@ -90,6 +133,9 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
         title: "Success!",
         description: state.message,
       });
+      if(isEditMode && onUpdate && state.data) {
+        onUpdate(state.data as Reservation);
+      }
       form.reset();
       setIsDialogOpen(false);
     } else if (state.message) {
@@ -99,10 +145,13 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
     }
-  }, [state, toast, form]);
+  }, [state, toast, form, setIsDialogOpen, isEditMode, onUpdate]);
 
   const onFormSubmit = (data: ReservationFormValues) => {
     const formData = new FormData();
+    if(isEditMode && reservation) {
+      formData.append("id", reservation.id);
+    }
     Object.entries(data).forEach(([key, value]) => {
       formData.append(key, value);
     });
@@ -121,12 +170,12 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
       setIsDialogOpen(open);
       if (!open) form.reset();
     }}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create a New Reservation</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Reservation' : 'Create a New Reservation'}</DialogTitle>
           <DialogDescription>
-            Fill in the details below to book a common room.
+            {isEditMode ? 'Update the details for your reservation.' : 'Fill in the details below to book a common room.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -195,7 +244,7 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
                 render={({ field }) => (
                   <FormItem className="pt-2">
                     <FormLabel>Start Time</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select start time" />
@@ -215,7 +264,7 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
                 render={({ field }) => (
                   <FormItem className="pt-2">
                     <FormLabel>End Time</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select end time" />
@@ -240,7 +289,7 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex items-center space-x-4"
                       >
                         <FormItem className="flex items-center space-x-2 space-y-0">
@@ -266,9 +315,9 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
                 name="pin"
                 render={({ field }) => (
                   <FormItem className="pt-2">
-                    <FormLabel>4-Digit PIN</FormLabel>
+                    <FormLabel>{isEditMode ? "Enter PIN to Confirm" : "4-Digit PIN"}</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="****" {...field} maxLength={4} />
+                      <Input type="password" placeholder="****" {...field} maxLength={isEditMode ? 7 : 4} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -277,12 +326,12 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
             </div>
             <DialogFooter className="pt-4">
               <DialogClose asChild>
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
               </DialogClose>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Saving..." : "Save Reservation"}
+                {form.formState.isSubmitting ? "Saving..." : (isEditMode ? "Update Reservation" : "Save Reservation")}
               </Button>
             </DialogFooter>
           </form>
