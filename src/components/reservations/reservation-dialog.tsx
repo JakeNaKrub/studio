@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { createReservation } from "@/lib/actions";
@@ -36,15 +35,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
 
 const ReservationSchema = z.object({
   meetingName: z.string().min(3, "Meeting name must be at least 3 characters"),
@@ -52,7 +45,7 @@ const ReservationSchema = z.object({
   mobileNumber: z
     .string()
     .regex(/^\d{3}-\d{3}-\d{4}$/, "Use format XXX-XXX-XXXX"),
-  date: z.date({ required_error: "Please select a date." }),
+  date: z.string().min(1, "Please select a date."),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
   roomSize: z.enum(["small", "large"], {
@@ -76,7 +69,6 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [state, formAction] = useActionState(createReservation, { message: "" });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const form = useForm<ReservationFormValues>({
     resolver: zodResolver(ReservationSchema),
@@ -84,6 +76,7 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
       meetingName: "",
       personName: "",
       mobileNumber: "",
+      date: "",
       startTime: "",
       endTime: "",
       roomSize: undefined,
@@ -111,11 +104,7 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
   const onFormSubmit = (data: ReservationFormValues) => {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
-      if (value instanceof Date) {
-        formData.append(key, value.toISOString());
-      } else {
-        formData.append(key, value);
-      }
+      formData.append(key, value);
     });
     formAction(formData);
   };
@@ -193,38 +182,9 @@ export function ReservationDialog({ children }: { children: React.ReactNode }) {
                 render={({ field }) => (
                   <FormItem className="flex flex-col pt-2">
                     <FormLabel>Date</FormLabel>
-                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={(date) => {
-                            field.onChange(date);
-                            setIsCalendarOpen(false);
-                          }}
-                          disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || date < new Date("1900-01-01")}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <FormControl>
+                      <Input type="date" {...field} min={format(new Date(), "yyyy-MM-dd")}/>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

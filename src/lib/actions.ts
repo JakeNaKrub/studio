@@ -10,7 +10,7 @@ const ReservationSchema = z.object({
   meetingName: z.string().min(3, "Meeting name must be at least 3 characters"),
   personName: z.string().min(2, "Person name must be at least 2 characters"),
   mobileNumber: z.string().regex(/^\d{3}-\d{3}-\d{4}$/, "Mobile number must be in XXX-XXX-XXXX format"),
-  date: z.date({ required_error: "Please select a date." }),
+  date: z.string().min(1, "Please select a date."),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
   roomSize: z.enum(["small", "large"]),
@@ -28,16 +28,18 @@ export async function getReservations(): Promise<Reservation[]> {
 }
 
 export async function createReservation(prevState: any, formData: FormData) {
-  const validatedFields = ReservationSchema.safeParse({
+  const rawData = {
     meetingName: formData.get("meetingName"),
     personName: formData.get("personName"),
     mobileNumber: formData.get("mobileNumber"),
-    date: new Date(formData.get("date") as string),
+    date: formData.get("date"),
     startTime: formData.get("startTime"),
     endTime: formData.get("endTime"),
     roomSize: formData.get("roomSize"),
     pin: formData.get("pin"),
-  });
+  };
+  
+  const validatedFields = ReservationSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
     return {
@@ -58,7 +60,7 @@ export async function createReservation(prevState: any, formData: FormData) {
 
   const newReservation: Reservation = {
     id: crypto.randomUUID(),
-    date: date.toISOString(),
+    date: new Date(date).toISOString(),
     ...rest,
   };
 
@@ -67,6 +69,7 @@ export async function createReservation(prevState: any, formData: FormData) {
 
   revalidatePath("/reservations/list");
   revalidatePath("/reservations/calendar");
+  revalidatePath("/");
 
   return { message: "Reservation created successfully.", data: newReservation };
 }
@@ -96,6 +99,7 @@ export async function deleteReservation(prevState: any, formData: FormData) {
 
   revalidatePath("/reservations/list");
   revalidatePath("/reservations/calendar");
+  revalidatePath("/");
 
   return { message: "Reservation deleted successfully." };
 }
