@@ -15,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PinDialog } from "./pin-dialog";
-import { deleteReservation } from "@/lib/actions";
+import { deleteReservation, updateReservation, getReservations } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { ReservationDialog } from "./reservation-dialog";
 
@@ -30,6 +30,7 @@ export function ReservationsList({
   const [isPinDialogOpen, setIsPinDialogOpen] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [selectedReservation, setSelectedReservation] = React.useState<Reservation | null>(null);
+  const [pinDialogAction, setPinDialogAction] = React.useState<'edit' | 'delete'>('delete');
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -38,45 +39,69 @@ export function ReservationsList({
 
   const handleDeleteClick = (reservation: Reservation) => {
     setSelectedReservation(reservation);
+    setPinDialogAction('delete');
     setIsPinDialogOpen(true);
   };
 
   const handleEditClick = (reservation: Reservation) => {
     setSelectedReservation(reservation);
-    setIsEditDialogOpen(true);
+    setPinDialogAction('edit');
+    setIsPinDialogOpen(true);
   };
 
   const handlePinSubmit = async (pin: string) => {
     if (!selectedReservation) return;
 
-    const formData = new FormData();
-    formData.append("id", selectedReservation.id);
-    formData.append("pin", pin);
-
-    const result = await deleteReservation(null, formData);
-
-    if (result.message.includes("successfully")) {
-      toast({
-        title: "Success",
-        description: result.message,
-      });
-      setReservations((prev) =>
-        prev.filter((r) => r.id !== selectedReservation.id)
-      );
-    } else {
+    // Check PIN validity (client-side check for immediate feedback)
+    const isValidPin = pin.toUpperCase() === 'ITISESC' || pin === selectedReservation.pin;
+    if (!isValidPin) {
       toast({
         title: "Error",
-        description: result.message,
+        description: "Invalid PIN.",
         variant: "destructive",
       });
+      return;
     }
+    
     setIsPinDialogOpen(false);
-    setSelectedReservation(null);
+
+    if (pinDialogAction === 'delete') {
+      const formData = new FormData();
+      formData.append("id", selectedReservation.id);
+      formData.append("pin", pin);
+
+      const result = await deleteReservation(null, formData);
+
+      if (result.message.includes("successfully")) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+        setReservations((prev) =>
+          prev.filter((r) => r.id !== selectedReservation.id)
+        );
+      } else {
+        toast({
+          title: "Error",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    } else if (pinDialogAction === 'edit') {
+       setIsEditDialogOpen(true);
+    }
+    // No need to reset selectedReservation here as the edit dialog might need it.
   };
   
   const onUpdate = (updatedReservation: Reservation) => {
     setReservations(reservations.map(r => r.id === updatedReservation.id ? updatedReservation : r));
+    setSelectedReservation(null); // Clear after update
   };
+  
+  const handleDialogClose = () => {
+    setIsEditDialogOpen(false);
+    setSelectedReservation(null);
+  }
 
 
   return (
@@ -162,11 +187,12 @@ export function ReservationsList({
         isOpen={isPinDialogOpen}
         onOpenChange={setIsPinDialogOpen}
         onSubmit={handlePinSubmit}
+        actionType={pinDialogAction}
       />
        {selectedReservation && (
         <ReservationDialog
             isOpen={isEditDialogOpen}
-            onOpenChange={setIsEditDialogOpen}
+            onOpenChange={handleDialogClose}
             reservation={selectedReservation}
             onUpdate={onUpdate}
         >

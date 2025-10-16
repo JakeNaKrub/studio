@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, useActionState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useActionState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,7 +41,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const ReservationSchema = z.object({
+const ReservationBaseSchema = z.object({
   meetingName: z.string().min(3, "Meeting name must be at least 3 characters"),
   personName: z.string().min(2, "Person name must be at least 2 characters"),
   mobileNumber: z
@@ -52,14 +53,23 @@ const ReservationSchema = z.object({
   roomSize: z.enum(["small", "large"], {
     required_error: "You need to select a room size.",
   }),
-  pin: z.string().min(4, "PIN must be at least 4 digits."),
-})
-.refine((data) => data.startTime < data.endTime, {
+});
+
+const ReservationSchema = ReservationBaseSchema.extend({
+  pin: z.string().min(4, "PIN must be 4 digits.").max(4, "PIN must be 4 digits."),
+}).refine((data) => data.startTime < data.endTime, {
+    message: "End time must be after start time",
+    path: ["endTime"],
+});
+
+const UpdateReservationSchema = ReservationBaseSchema.refine((data) => data.startTime < data.endTime, {
     message: "End time must be after start time",
     path: ["endTime"],
 });
 
 type ReservationFormValues = z.infer<typeof ReservationSchema>;
+type UpdateReservationFormValues = z.infer<typeof UpdateReservationSchema>;
+
 
 const timeSlots = Array.from({ length: 22 }, (_, i) => {
     const hour = i + 8; // 8 AM to 5 PM (17:00)
@@ -92,12 +102,11 @@ export function ReservationDialog({
   const isDialogOpen = controlledIsOpen ?? internalIsOpen;
   const setIsDialogOpen = controlledOnOpenChange ?? setInternalIsOpen;
 
-  const form = useForm<ReservationFormValues>({
-    resolver: zodResolver(ReservationSchema),
+  const form = useForm<ReservationFormValues | UpdateReservationFormValues>({
+    resolver: zodResolver(isEditMode ? UpdateReservationSchema : ReservationSchema),
     defaultValues: isEditMode ? {
       ...reservation,
       date: format(parseISO(reservation.date), "yyyy-MM-dd"),
-      pin: "", // Clear pin for security
     } : {
       meetingName: "",
       personName: "",
@@ -114,7 +123,6 @@ export function ReservationDialog({
     form.reset(isEditMode ? {
         ...reservation,
         date: format(parseISO(reservation.date), "yyyy-MM-dd"),
-        pin: ""
     } : {
         meetingName: "",
         personName: "",
@@ -125,7 +133,7 @@ export function ReservationDialog({
         roomSize: undefined,
         pin: "",
     });
-  }, [reservation, isEditMode, form]);
+  }, [reservation, isEditMode, form, isDialogOpen]);
 
   useEffect(() => {
     if (state.message.includes("successfully")) {
@@ -133,7 +141,7 @@ export function ReservationDialog({
         title: "Success!",
         description: state.message,
       });
-      if(isEditMode && onUpdate && state.data) {
+      if(onUpdate && state.data) {
         onUpdate(state.data as Reservation);
       }
       form.reset();
@@ -145,15 +153,15 @@ export function ReservationDialog({
         variant: "destructive",
       });
     }
-  }, [state, toast, form, setIsDialogOpen, isEditMode, onUpdate]);
+  }, [state, toast, form, setIsDialogOpen, onUpdate]);
 
-  const onFormSubmit = (data: ReservationFormValues) => {
+  const onFormSubmit = (data: ReservationFormValues | UpdateReservationFormValues) => {
     const formData = new FormData();
     if(isEditMode && reservation) {
       formData.append("id", reservation.id);
     }
     Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, value);
+      formData.append(key, String(value));
     });
     formAction(formData);
   };
@@ -310,19 +318,21 @@ export function ReservationDialog({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="pin"
-                render={({ field }) => (
-                  <FormItem className="pt-2">
-                    <FormLabel>{isEditMode ? "Enter PIN to Confirm" : "4-Digit PIN"}</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="****" {...field} maxLength={isEditMode ? 7 : 4} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!isEditMode && (
+                <FormField
+                    control={form.control}
+                    name="pin"
+                    render={({ field }) => (
+                    <FormItem className="pt-2">
+                        <FormLabel>4-Digit PIN</FormLabel>
+                        <FormControl>
+                        <Input type="password" placeholder="****" {...field} maxLength={4} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+              )}
             </div>
             <DialogFooter className="pt-4">
               <DialogClose asChild>

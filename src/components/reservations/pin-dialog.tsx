@@ -18,6 +18,7 @@ interface PinDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (pin: string) => void;
+  actionType: "edit" | "delete";
 }
 
 const ADMIN_PIN_LENGTH = 7;
@@ -26,6 +27,7 @@ export function PinDialog({
   isOpen,
   onOpenChange,
   onSubmit,
+  actionType,
 }: PinDialogProps) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
@@ -58,10 +60,10 @@ export function PinDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5 text-primary" />
-              Enter PIN
+              Enter PIN to {actionType === 'edit' ? 'Edit' : 'Delete'}
             </DialogTitle>
             <DialogDescription>
-              Please enter the 4-digit PIN associated with this reservation to proceed. Admin can use override PIN.
+              Please enter the PIN associated with this reservation to proceed. Admin can use an override PIN.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

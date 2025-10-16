@@ -6,13 +6,14 @@ import type { Reservation } from "@/lib/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Building2, Calendar as CalendarIcon } from "lucide-react";
+import { Clock, Users, Edit, Trash2 } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "../ui/button";
+import { ReservationsList } from "./reservations-list";
 
 interface ReservationsCalendarProps {
   reservations: Reservation[];
@@ -20,6 +21,7 @@ interface ReservationsCalendarProps {
 
 export function ReservationsCalendar({ reservations }: ReservationsCalendarProps) {
   const [month, setMonth] = React.useState<Date>(new Date());
+  const [selectedDay, setSelectedDay] = React.useState<Date | null>(null);
 
   const reservationsByDay = React.useMemo(() => {
     return reservations.reduce((acc, reservation) => {
@@ -31,8 +33,7 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
       return acc;
     }, {} as Record<string, Reservation[]>);
   }, [reservations]);
-
-
+  
   const DayWithReservations = (day: Date) => {
     const dayStr = format(day, "yyyy-MM-dd");
     const dayReservations = reservationsByDay[dayStr] || [];
@@ -46,57 +47,21 @@ export function ReservationsCalendar({ reservations }: ReservationsCalendarProps
     }
     
     return (
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button variant="ghost" className="w-full h-full flex flex-col items-center justify-center p-0 rounded-md hover:bg-accent focus:bg-accent-foreground/10 relative">
-                    <span className="font-bold">{format(day, 'd')}</span>
-                    <div className="text-xs text-muted-foreground -mt-1">{dayReservations.length} bkngs</div>
-                    <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary"></div>
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-                 <CardHeader className="p-2">
-                    <CardTitle className="text-lg">
-                        Schedule for {format(day, "PPP")}
-                    </CardTitle>
-                    <CardDescription>
-                        {dayReservations.length} reservation(s)
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="p-2">
-                <ul className="space-y-2">
-                  {dayReservations
-                    .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                    .map((res) => (
-                      <li key={res.id} className="p-3 rounded-lg border bg-card text-sm">
-                        <p className="font-semibold">{res.meetingName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          by {res.personName}
-                        </p>
-                        <div className="flex items-center justify-between mt-2 text-xs">
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            <span>
-                              {res.startTime} - {res.endTime}
-                            </span>
-                          </div>
-                          <Badge
-                            variant={
-                              res.roomSize === "large" ? "default" : "secondary"
-                            }
-                            className="capitalize flex items-center gap-1 text-xs"
-                          >
-                            <Users className="h-3 w-3" /> {res.roomSize}
-                          </Badge>
-                        </div>
-                      </li>
-                    ))}
-                </ul>
-                </CardContent>
-            </PopoverContent>
-        </Popover>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" className="w-full h-full flex flex-col items-center justify-center p-0 rounded-md hover:bg-accent focus:bg-accent-foreground/10 relative">
+              <span className="font-bold">{format(day, 'd')}</span>
+              <div className="text-xs text-muted-foreground -mt-1">{dayReservations.length} bkngs</div>
+              <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary"></div>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 p-0">
+          <ReservationsList reservations={dayReservations} />
+        </PopoverContent>
+      </Popover>
     )
   }
+
 
   return (
     <Card>

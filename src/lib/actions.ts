@@ -5,8 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "./db";
 import type { Reservation } from "./types";
 
-const ReservationSchema = z.object({
-  id: z.string().optional(),
+const ReservationBaseSchema = z.object({
   meetingName: z.string().min(3, "Meeting name must be at least 3 characters"),
   personName: z.string().min(2, "Person name must be at least 2 characters"),
   mobileNumber: z.string().regex(/^\d{3}-\d{3}-\d{4}$/, "Mobile number must be in XXX-XXX-XXXX format"),
@@ -14,10 +13,13 @@ const ReservationSchema = z.object({
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
   roomSize: z.enum(["small", "large"]),
-  pin: z.string().min(4, "PIN must be at least 4 digits"),
 });
 
-const UpdateReservationSchema = ReservationSchema.extend({
+const ReservationSchema = ReservationBaseSchema.extend({
+  pin: z.string().min(4, "PIN must be 4 digits.").max(4, "PIN must be 4 digits."),
+});
+
+const UpdateReservationSchema = ReservationBaseSchema.extend({
     id: z.string(),
 });
 
@@ -91,7 +93,6 @@ export async function updateReservation(prevState: any, formData: FormData) {
         startTime: formData.get("startTime"),
         endTime: formData.get("endTime"),
         roomSize: formData.get("roomSize"),
-        pin: formData.get("pin"),
     };
 
     const validatedFields = UpdateReservationSchema.safeParse(rawData);
@@ -100,7 +101,14 @@ export async function updateReservation(prevState: any, formData: FormData) {
         return { message: "Validation failed.", errors: validatedFields.error.flatten().fieldErrors };
     }
     
-    const { id, date, pin, ...rest } = validatedFields.data;
+    const { id, date, ...rest } = validatedFields.data;
+
+    if (rest.startTime >= rest.endTime) {
+      return {
+          errors: { endTime: ["End time must be after start time."] },
+          message: "Validation failed."
+      }
+    }
 
     const reservationIndex = db.reservations.findIndex((r) => r.id === id);
 
@@ -110,16 +118,10 @@ export async function updateReservation(prevState: any, formData: FormData) {
 
     const originalReservation = db.reservations[reservationIndex];
 
-    if (pin.toUpperCase() !== ADMIN_PIN && pin !== originalReservation.pin) {
-        return { message: "Invalid PIN." };
-    }
-
     const updatedReservation: Reservation = {
         ...originalReservation,
         ...rest,
         date: new Date(date).toISOString(),
-        // Keep original pin if a new one isn't provided, or if the admin pin was used
-        pin: originalReservation.pin,
     };
     
     db.reservations[reservationIndex] = updatedReservation;
