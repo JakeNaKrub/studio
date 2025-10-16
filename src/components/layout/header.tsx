@@ -1,8 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Moon } from "lucide-react";
+import { Moon, Info } from "lucide-react";
 import { Button } from "../ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function Header() {
   // A full theme toggle implementation is out of scope.
@@ -17,10 +27,35 @@ export function Header() {
         <Link href="/" className="flex items-center">
           <span className="font-bold text-lg font-headline">Common-Room Booking</span>
         </Link>
-        <Button variant="ghost" size="icon" onClick={toggleTheme}>
-          <Moon className="h-5 w-5" />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Info className="h-5 w-5" />
+                <span className="sr-only">Show Rules</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reservation Rules</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <ul className="list-disc pl-5 space-y-2 py-2">
+                    <li>Please tell P’First and P’Bam for your reservation.</li>
+                    <li>This website is intended for mitigating reservation conflict.</li>
+                  </ul>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction>Got it!</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            <Moon className="h-5 w-5" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+        </div>
       </div>
     </header>
   );
